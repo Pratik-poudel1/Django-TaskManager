@@ -1,0 +1,258 @@
+{% extends 'todoapp/base.html' %}
+{% load widget_tweaks %}
+
+{% block extra_css %}
+<style>
+    /* Completed badge */
+    .badge-completed {
+        background-color: #198754 !important;
+        color: white !important;
+        font-weight: 600;
+        padding: 0.35em 0.75em;
+        border-radius: 0.75rem;
+    }
+
+    /* Card for completed tasks */
+    .task-card.completed {
+        background: #d1e7dd;
+        color: #0f5132;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(15, 81, 50, 0.2);
+        transition: box-shadow 0.3s ease;
+        cursor: grab;
+    }
+
+    .task-card.completed:hover {
+        box-shadow: 0 8px 16px rgba(15, 81, 50, 0.3);
+    }
+
+    .task-card.completed:active {
+        cursor: grabbing;
+    }
+
+    .task-card.completed .card-title {
+        color: #0b4228;
+        font-weight: 700;
+    }
+
+    .task-card.completed .card-text {
+        color: #2d6a4f;
+    }
+
+    .task-card.completed .badge.bg-secondary {
+        background-color: #52b788 !important;
+        color: white !important;
+    }
+
+    /* Buttons */
+    .btn-outline-primary {
+        color: #0f5132;
+        border-color: #0f5132;
+    }
+    .btn-outline-primary:hover {
+        background-color: #0f5132;
+        color: white;
+    }
+    .btn-outline-danger {
+        color: #7a1f1f;
+        border-color: #7a1f1f;
+    }
+    .btn-outline-danger:hover {
+        background-color: #7a1f1f;
+        color: white;
+    }
+    .btn-sm.btn-warning {
+        background-color: #f0ad4e;
+        border-color: #eea236;
+        color: #212529;
+    }
+    .btn-sm.btn-warning:hover {
+        background-color: #ec971f;
+        border-color: #d58512;
+        color: white;
+    }
+
+    /* Text success small */
+    .text-success {
+        color: #14532d !important;
+    }
+
+    /* Sortable ghost style */
+    .sortable-ghost {
+        opacity: 0.5;
+        background: #f8f9fa;
+    }
+
+    /* Search bar styling */
+    form.mb-4 .input-group .form-control {
+        border: 2px solid #198754;
+        border-right: none;
+        border-radius: 30px 0 0 30px;
+        padding-left: 15px;
+        font-weight: 500;
+        color: #0f5132;
+        box-shadow: 0 0 6px rgba(25, 135, 84, 0.4);
+        transition: border-color 0.3s ease;
+    }
+    form.mb-4 .input-group .form-control:focus {
+        border-color: #14532d;
+        box-shadow: 0 0 10px rgba(20, 83, 45, 0.7);
+        outline: none;
+    }
+    form.mb-4 .input-group .btn-primary {
+        border: 2px solid #198754;
+        border-radius: 0 30px 30px 0;
+        background-color: #198754;
+        color: white;
+        font-weight: 600;
+        transition: background-color 0.3s ease;
+    }
+    form.mb-4 .input-group .btn-primary:hover {
+        background-color: #14532d;
+        border-color: #14532d;
+        color: white;
+    }
+
+    /* Prevent full page scroll */
+    body {
+        margin: 0;
+        overflow: hidden;
+        height: 100vh;
+    }
+
+    .main-content {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    /* Scrollable completed tasks */
+    .tasks-scroll {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 10px;
+    }
+
+    .tasks-scroll::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .tasks-scroll::-webkit-scrollbar-thumb {
+        background-color: #198754;
+        border-radius: 4px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const taskContainer = document.querySelector('.tasks-scroll');
+
+    if (!taskContainer) return;
+
+    new Sortable(taskContainer, {
+        animation: 150,
+        handle: '.task-card',
+        ghostClass: 'sortable-ghost',
+        onEnd: function (evt) {
+            const tasks = Array.from(taskContainer.querySelectorAll('.task-col')).map((col, index) => ({
+                id: col.dataset.taskId,
+                priority: index
+            }));
+
+            fetch("{% url 'update_priority' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(tasks)
+            }).then(response => response.json())
+              .then(data => console.log('Priority updated:', data));
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Completed Tasks</h1>
+    <a href="{% url 'task_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Pending
+    </a>
+</div>
+
+<!-- Search Bar -->
+<form method="GET" action="{% url 'completed_tasks' %}" class="mb-4">
+    <div class="input-group">
+        <input type="search" name="q" value="{{ query|default:'' }}" class="form-control"
+               placeholder="Search completed tasks..." aria-label="Search completed tasks" autofocus autocomplete="off">
+        <button class="btn btn-primary" type="submit">
+            <i class="fas fa-search"></i>
+        </button>
+    </div>
+</form>
+
+{% if tasks %}
+<div class="tasks-scroll row g-3">
+    {% for task in tasks %}
+    <div class="col-md-6 col-lg-4 mb-3 task-col" data-task-id="{{ task.id }}">
+        <div class="card task-card completed">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title">{{ task.title }}</h5>
+                    <span class="status-badge badge-completed">Completed</span>
+                </div>
+
+                {% if task.categories.all %}
+                <div class="mb-2">
+                    {% for category in task.categories.all %}
+                    <span class="badge bg-secondary me-1">{{ category.name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <p class="card-text">{{ task.description|truncatechars:100 }}</p>
+
+                {% if task.completed_at %}
+                <div class="mb-2">
+                    <small class="text-success">
+                        <i class="fas fa-check-circle me-1"></i>
+                        Completed on: {{ task.completed_at|date:"M d, Y H:i" }}
+                    </small>
+                </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between mt-3">
+                    <small class="text-muted">Created: {{ task.created|date:"M d, Y" }}</small>
+                    <div>
+                        <a href="{% url 'update_task' task.id %}" class="btn btn-sm btn-outline-primary me-1">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'delete_task' task.id %}" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                        <form method="post" action="{% url 'mark_task_pending' task.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-warning" title="Mark as Pending">
+                                <i class="fas fa-undo-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    No completed tasks yet. Get to work!
+</div>
+{% endif %}
+{% endblock %}

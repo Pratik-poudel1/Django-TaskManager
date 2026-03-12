@@ -1,0 +1,129 @@
+{% extends 'todoapp/base.html' %}
+{% load widget_tweaks %}
+
+{% block extra_css %}
+<style>
+/* Page container for scrolling */
+body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+.main-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.categories-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+    padding-left: 0;
+}
+.categories-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+.categories-scroll::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #6a11cb, #2575fc);
+    border-radius: 4px;
+}
+
+/* Category cards */
+.category-card {
+    border-radius: 15px;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4, #a18cd1);
+    padding: 20px;
+    color: #ffffff; /* Make text white for readability */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5); /* subtle shadow */
+}
+
+/* Hover effect */
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+}
+
+/* Badge for task count */
+.category-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Card buttons */
+.category-card .btn-outline-primary,
+.category-card .btn-outline-danger {
+    color: white;
+    border-color: white;
+    transition: all 0.3s;
+}
+.category-card .btn-outline-primary:hover {
+    background-color: white;
+    color: #2575fc;
+}
+.category-card .btn-outline-danger:hover {
+    background-color: white;
+    color: #ff6b6b;
+}
+
+/* Header buttons */
+.header-btns .btn {
+    transition: transform 0.2s;
+}
+.header-btns .btn:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0 text-primary fw-bold"><i class="fas fa-th-large me-2"></i>Task Categories</h1>
+    <div class="d-flex gap-2 header-btns">
+        <a class="btn btn-primary btn-lg" href="{% url 'create_task' %}">
+            <i class="fas fa-plus-circle me-2"></i>Add New Task
+        </a>
+        <a href="{% url 'create_category' %}" class="btn btn-success btn-lg">
+            <i class="fas fa-plus me-1"></i> Add Category
+        </a>
+    </div>
+</div>
+
+{% if categories %}
+<div class="categories-scroll">
+    <div class="row g-4">
+        {% for category in categories %}
+        <div class="col-md-4 category-col">
+            <div class="category-card">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">{{ category.name }}</h5>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'edit_category' category.id %}" class="btn btn-sm btn-outline-primary" title="Edit Category">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'delete_category' category.id %}" class="btn btn-sm btn-outline-danger" title="Delete Category">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <span class="category-badge">Tasks: {{ category.task_set.count }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info text-center">
+    <i class="fas fa-info-circle me-2"></i>No categories created yet. Create your first category to organize tasks.
+</div>
+{% endif %}
+{% endblock %}

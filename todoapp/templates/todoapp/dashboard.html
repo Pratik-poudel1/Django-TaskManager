@@ -1,0 +1,153 @@
+{% extends 'todoapp/base.html' %}
+{% load static %}
+{% block content %}
+<h2 class="mb-4 text-center fw-bold">📊 Dashboard Overview</h2>
+
+<div class="container-fluid">
+    <div class="row g-4">
+        <!-- Completed Tasks Per Day -->
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-primary text-center mb-3">
+                        <i class="bi bi-bar-chart-fill"></i> Tasks Completed (Last 7 Days)
+                    </h5>
+                    <canvas id="completedWeekChart" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending vs Completed -->
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-success text-center mb-3">
+                        <i class="bi bi-pie-chart-fill"></i> Pending vs Completed
+                    </h5>
+                    <canvas id="statusChart" height="150"></canvas>
+                    <div class="d-flex justify-content-around mt-3">
+                        <span class="badge bg-danger p-2">⏳ Pending: {{ pending_count }}</span>
+                        <span class="badge bg-success p-2">✅ Completed: {{ completed_count }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <!-- Priority Distribution -->
+        <div class="col-md-6 offset-md-3">
+            <div class="card shadow-lg border-0 h-100">
+                <div class="card-body">
+                    <h5 class="card-title text-warning text-center mb-3">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Tasks by Priority
+                    </h5>
+                    <canvas id="priorityChart" height="200"></canvas>
+                    <div class="d-flex justify-content-around mt-3">
+                        <span class="badge bg-danger p-2">🔥 High: {{ priority_counts.High }}</span>
+                        <span class="badge bg-warning text-dark p-2">⚡ Medium: {{ priority_counts.Medium }}</span>
+                        <span class="badge bg-info text-dark p-2">🧊 Low: {{ priority_counts.Low }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Django JSON data safely -->
+{{ last_7_days|json_script:"last7days-data" }}
+{{ completed_per_day|json_script:"completed-data" }}
+{{ pending_count|json_script:"pending-count" }}
+{{ completed_count|json_script:"completed-count" }}
+{{ priority_counts|json_script:"priority-counts" }}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Parse Django data
+    const last7Days = JSON.parse(document.getElementById('last7days-data').textContent || '[]');
+    const completedPerDay = JSON.parse(document.getElementById('completed-data').textContent || '[]');
+    const pendingCount = JSON.parse(document.getElementById('pending-count').textContent || '0');
+    const completedCount = JSON.parse(document.getElementById('completed-count').textContent || '0');
+    const priorityCounts = JSON.parse(document.getElementById('priority-counts').textContent || '{"High":0,"Medium":0,"Low":0}');
+
+    const commonOptions = {
+        responsive: true,
+        plugins: { legend: { display: true } }
+    };
+
+    // ✅ Format days as short names (Mon, Tue...)
+    const formattedDays = last7Days.map(dateStr => {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-US', { weekday: 'short' });
+    });
+
+    // ✅ Highlight today's bar
+    const todayIndex = last7Days.findIndex(d => {
+        const today = new Date();
+        const dateOnly = today.toISOString().split("T")[0]; // "YYYY-MM-DD"
+        return d === dateOnly;
+    });
+
+    const barColors = last7Days.map((d, i) => 
+        i === todayIndex ? 'rgba(255, 99, 132, 0.8)' : 'rgba(54, 162, 235, 0.7)'
+    );
+
+    // 📊 Completed tasks per week chart
+    new Chart(document.getElementById('completedWeekChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: formattedDays,
+            datasets: [{
+                label: 'Completed Tasks',
+                data: completedPerDay,
+                backgroundColor: barColors,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: 'Tasks Completed per Day (Last 7 Days)' }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+
+    // 📊 Pending vs Completed
+    new Chart(document.getElementById('statusChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Pending', 'Completed'],
+            datasets: [{
+                data: [pendingCount, completedCount],
+                backgroundColor: ['#ff6b6b', 'rgba(54, 162, 235, 0.7)']
+            }]
+        },
+        options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Pending vs Completed Tasks' } } }
+    });
+
+    // 📊 Priority distribution
+    new Chart(document.getElementById('priorityChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: ['High', 'Medium', 'Low'],
+            datasets: [{
+                data: [priorityCounts.High || 0, priorityCounts.Medium || 0, priorityCounts.Low || 0],
+                backgroundColor: ['#ff4c4c', '#ffc107', '#5bc0de']
+            }]
+        },
+        options: { ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: 'Tasks by Priority' } } }
+    });
+});
+</script>
+{% endblock %}

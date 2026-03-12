@@ -1,0 +1,75 @@
+{% extends 'todoapp/base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container auth-container d-flex justify-content-center align-items-center vh-100">
+    <div class="row w-100 shadow-lg rounded overflow-hidden">
+        <!-- Left Image Section -->
+        <div class="col-md-6 d-none d-md-block p-0">
+            <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80"
+                 class="img-fluid h-100 w-100 object-fit-cover" alt="Register Image">
+        </div>
+
+        <!-- Register Form Section -->
+        <div class="col-md-6 bg-white p-5 d-flex flex-column justify-content-center">
+            <div class="text-center mb-4">
+                <i class="fas fa-user-plus fa-4x text-primary mb-3"></i>
+                <h2 class="fw-bold">Create an Account</h2>
+                <p class="text-muted">Start managing your tasks today</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label for="id_username" class="form-label fw-semibold">Username</label>
+                    {% render_field form.username class="form-control form-control-lg" placeholder="Choose a username" %}
+                </div>
+
+                <div class="mb-4">
+                    <label for="id_email" class="form-label fw-semibold">Email</label>
+                    {% render_field form.email class="form-control form-control-lg" placeholder="Your email address" %}
+                </div>
+
+                <div class="mb-4">
+                    <label for="id_password1" class="form-label fw-semibold">Password</label>
+                    {% render_field form.password1 class="form-control form-control-lg" placeholder="Create a password" %}
+                </div>
+
+                <div class="mb-4">
+                    <label for="id_password2" class="form-label fw-semibold">Confirm Password</label>
+                    {% render_field form.password2 class="form-control form-control-lg" placeholder="Repeat your password" %}
+                </div>
+
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-primary btn-lg fw-bold" style="background: linear-gradient(135deg, #4361ee, #3f37c9); border: none;">
+                        <i class="fas fa-user-plus me-2"></i> Register
+                    </button>
+                </div>
+
+                <div class="text-center">
+                    <p class="mb-0">Already have an account? 
+                        <a href="{% url 'login' %}" class="fw-semibold text-primary text-decoration-none">Login</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-container {
+    max-width: 900px;
+}
+
+.object-fit-cover {
+    object-fit: cover;
+}
+
+@media (max-width: 767px) {
+    .col-md-6.d-none.d-md-block {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

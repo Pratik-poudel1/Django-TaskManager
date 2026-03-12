@@ -1,0 +1,104 @@
+{% extends 'todoapp/base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">Edit Profile</h2>
+        <a href="{% url 'profile_view' %}" class="btn btn-light btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Profile
+        </a>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            
+            <div class="text-center mb-4">
+                {% if form.instance.profile_picture %}
+                <img src="{{ form.instance.profile_picture.url }}" 
+                     class="rounded-circle mb-2 shadow" 
+                     width="120" 
+                     height="120"
+                     alt="Profile picture">
+                {% else %}
+                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-2 mx-auto" 
+                     style="width: 120px; height: 120px;">
+                    <i class="fas fa-user fa-3x text-secondary"></i>
+                </div>
+                {% endif %}
+                <div>
+                    <h4>{{ user.username }}</h4>
+                    <p class="text-muted">{{ user.email }}</p>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Profile Picture</label>
+                {% render_field form.profile_picture class="form-control" %}
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Full Name</label>
+                <input type="text" name="full_name" class="form-control" placeholder="Your full name" 
+                       value="{{ form.full_name.value|default_if_none:'' }}">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Date of Birth</label>
+                <input type="date" name="date_of_birth" class="form-control" 
+                       value="{{ form.date_of_birth.value|default_if_none:'' }}">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Location</label>
+                <input type="text" name="location" class="form-control" placeholder="City, Country" 
+                       value="{{ form.location.value|default_if_none:'' }}">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Website / Social Link</label>
+                <input type="url" name="website" class="form-control" placeholder="https://yourwebsite.com" 
+                       value="{{ form.website.value|default_if_none:'' }}">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Bio</label>
+                {% render_field form.bio class="form-control" rows="3" placeholder="Tell us about yourself..." %}
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Skills or Interests</label>
+                <textarea name="skills" class="form-control" rows="3" placeholder="Programming, Chess, Django, etc.">{{ form.skills.value|default_if_none:'' }}</textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">LinkedIn</label>
+                <input type="url" name="linkedin" class="form-control" placeholder="LinkedIn profile URL" 
+                       value="{{ form.linkedin.value|default_if_none:'' }}">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">GitHub</label>
+                <input type="url" name="github" class="form-control" placeholder="GitHub profile URL" 
+                       value="{{ form.github.value|default_if_none:'' }}">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Twitter</label>
+                <input type="url" name="twitter" class="form-control" placeholder="Twitter profile URL" 
+                       value="{{ form.twitter.value|default_if_none:'' }}">
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Phone Number</label>
+                {% render_field form.phone_number class="form-control" placeholder="+1 (123) 456-7890" %}
+            </div>
+            
+            <div class="d-flex justify-content-end mt-4">
+                <a href="{% url 'profile_view' %}" class="btn btn-outline-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-primary">Update Profile</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

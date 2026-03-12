@@ -1,0 +1,90 @@
+{% extends 'todoapp/base.html' %}
+
+{% block extra_css %}
+<style>
+    /* Scrollable activity log */
+    .activity-container {
+        max-height: 500px;
+        /* adjust height as needed */
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+
+    /* Optional: scrollbar styling */
+    .activity-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .activity-container::-webkit-scrollbar-thumb {
+        background-color: #0d6efd;
+        /* primary color */
+        border-radius: 4px;
+    }
+
+    .activity-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    /* Search bar styling */
+    form.mb-3 .input-group .form-control {
+        border: 2px solid #0d6efd;
+        border-right: none;
+        border-radius: 30px 0 0 30px;
+        padding-left: 15px;
+        font-weight: 500;
+        color: #0d3b66;
+        box-shadow: 0 0 6px rgba(13, 110, 253, 0.4);
+        transition: border-color 0.3s ease;
+    }
+
+    form.mb-3 .input-group .form-control:focus {
+        border-color: #0a58ca;
+        box-shadow: 0 0 10px rgba(10, 88, 202, 0.7);
+        outline: none;
+    }
+
+    form.mb-3 .input-group .btn-outline-secondary {
+        border: 2px solid #0d6efd;
+        border-radius: 0 30px 30px 0;
+        background-color: #0d6efd;
+        color: white;
+        font-weight: 600;
+        transition: background-color 0.3s ease;
+    }
+
+    form.mb-3 .input-group .btn-outline-secondary:hover {
+        background-color: #0a58ca;
+        border-color: #0a58ca;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Activity Log</h1>
+
+<!-- Search form -->
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" class="form-control" placeholder="Search activity..."
+            value="{{ query|default:'' }}">
+        <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+    </div>
+</form>
+
+{% if logs %}
+<div class="activity-container list-group">
+    {% for log in logs %}
+    <li class="list-group-item">
+        <small class="text-muted">{{ log.timestamp|date:"M d, Y H:i" }}</small><br>
+        <strong>{{ log.action|capfirst }}</strong> - {{ log.description }}
+        <br>
+        <small>Task: <a href="{% url 'update_task' log.task.id %}">{{ log.task.title }}</a></small>
+    </li>
+    {% endfor %}
+</div>
+{% else %}
+<p>No activity yet.</p>
+{% endif %}
+{% endblock %}

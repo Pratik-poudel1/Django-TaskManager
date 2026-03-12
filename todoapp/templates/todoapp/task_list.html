@@ -1,0 +1,262 @@
+{% extends 'todoapp/base.html' %}
+{% load widget_tweaks %}
+
+{% block extra_css %}
+<style>
+    /* Status badge colors */
+    .badge.bg-danger {
+        background-color: #dc3545 !important;
+        color: #fff !important;
+        font-weight: 600;
+    }
+
+    .badge.bg-secondary {
+        background-color: #6c757d !important;
+        color: #fff !important;
+        font-weight: 600;
+    }
+
+    /* Task cards */
+    .task-card.pending {
+        background: #e3f2fd;
+        color: #0d3b66;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(13, 59, 102, 0.2);
+        transition: box-shadow 0.3s ease;
+    }
+
+    .task-card.pending:hover {
+        box-shadow: 0 8px 16px rgba(13, 59, 102, 0.3);
+    }
+
+    .task-card.pending .card-title,
+    .task-card.pending .card-text,
+    .task-card.pending small,
+    .task-card.pending .badge {
+        color: #0d3b66 !important;
+    }
+
+    .task-card.pending .badge.bg-secondary {
+        background-color: #20c997 !important;
+        color: #fff !important;
+    }
+
+    /* Search bar styling */
+    form.mb-3 .input-group .form-control {
+        border: 2px solid #0d6efd;
+        border-right: none;
+        border-radius: 30px 0 0 30px;
+        padding-left: 15px;
+        font-weight: 500;
+        color: #0d3b66;
+        box-shadow: 0 0 6px rgba(13, 110, 253, 0.4);
+        transition: border-color 0.3s ease;
+    }
+
+    form.mb-3 .input-group .form-control:focus {
+        border-color: #0a58ca;
+        box-shadow: 0 0 10px rgba(10, 88, 202, 0.7);
+        outline: none;
+    }
+
+    form.mb-3 .input-group .btn-outline-secondary {
+        border: 2px solid #0d6efd;
+        border-radius: 0 30px 30px 0;
+        background-color: #0d6efd;
+        color: white;
+        font-weight: 600;
+        transition: background-color 0.3s ease;
+    }
+
+    form.mb-3 .input-group .btn-outline-secondary:hover {
+        background-color: #0a58ca;
+        border-color: #0a58ca;
+        color: white;
+    }
+
+    :root {
+        --bg-color: #ffffff;
+        --text-color: #000000;
+        --card-bg: #f8f9fa;
+    }
+
+    [data-theme="dark"] {
+        --bg-color: #121212;
+        --text-color: #e0e0e0;
+        --card-bg: #1e1e1e;
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        overflow: hidden;
+        /* Prevent full page scroll */
+        height: 100vh;
+    }
+
+    .card {
+        background-color: var(--card-bg);
+    }
+
+    .main-content {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .tasks-scroll {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 10px;
+        padding-left: 0;
+    }
+
+    .tasks-scroll::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .tasks-scroll::-webkit-scrollbar-thumb {
+        background-color: #0d6efd;
+        border-radius: 4px;
+    }
+
+    .badge.bg-danger {
+        background-color: #dc3545 !important;
+        /* Red for overdue */
+        color: white !important;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const taskContainer = document.querySelector('.tasks-container');
+
+        new Sortable(taskContainer, {
+            animation: 150,
+            handle: '.task-card',
+            ghostClass: 'sortable-ghost',
+            onEnd: function (evt) {
+                const tasks = Array.from(taskContainer.querySelectorAll('.task-col')).map((col, index) => ({
+                    id: col.dataset.taskId,
+                    priority: index
+                }));
+
+                fetch("{% url 'update_priority' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(tasks)
+                }).then(response => response.json())
+                    .then(data => console.log('Priority updated:', data));
+            }
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">My Tasks</h1>
+    <div>
+        <a href="{% url 'create_task' %}" class="btn btn-primary me-2">
+            <i class="fas fa-plus me-1"></i> Add Task
+        </a>
+        <a href="{% url 'category_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-tags me-1"></i> Categories
+        </a>
+    </div>
+</div>
+
+<!-- Search form -->
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" class="form-control" placeholder="Search tasks..." value="{{ query|default:'' }}">
+        <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+    </div>
+</form>
+
+<h3 class="mb-3">Pending Tasks <span class="badge bg-secondary">{{ tasks.count }}</span></h3>
+
+{% if tasks %}
+<div class="tasks-scroll">
+    <div class="row g-3 tasks-container">
+        {% for task in tasks %}
+        <div class="col-md-6 col-lg-4 task-col" data-task-id="{{ task.id }}">
+            <div class="card task-card pending">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title">{{ task.title }}</h5>
+
+                        {% if task.is_overdue %}
+                        <span class="badge bg-danger">Overdue</span>
+                        {% elif task.status == 'pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% else %}
+                        <span class="badge bg-success">Completed</span>
+                        {% endif %}
+                    </div>
+
+
+                    <!-- Priority + Categories -->
+                    <div class="d-flex align-items-center mb-2 flex-wrap">
+                        {% if task.priority_level == 'H' %}
+                        <span class="badge me-2" style="background-color:#ff7f50; color:white;">High</span>
+                        {% elif task.priority_level == 'M' %}
+                        <span class="badge bg-warning me-2">Medium</span>
+                        {% else %}
+                        <span class="badge me-2" style="background-color:#5bc0de; color:white;">Low</span>
+                        {% endif %}
+
+                        {% for category in task.categories.all %}
+                        <span class="badge bg-secondary me-1">{{ category.name }}</span>
+                        {% empty %}
+                        <span class="text-muted small">No category</span>
+                        {% endfor %}
+                    </div>
+
+                    <p class="card-text">{{ task.description|truncatechars:100 }}</p>
+
+                    {% if task.due_date %}
+                    <div class="mb-2">
+                        <small>
+                            <i class="far fa-clock me-1"></i> Due: {{ task.due_date|date:"M d, Y H:i" }}
+                        </small>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <small>Created: {{ task.created|date:"M d, Y" }}</small>
+                        <div>
+                            <a href="{% url 'update_task' task.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'delete_task' task.id %}" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            <form method="post" action="{% url 'complete_task' task.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success" title="Mark as Complete">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">No pending tasks. Great job!</div>
+{% endif %}
+{% endblock %}

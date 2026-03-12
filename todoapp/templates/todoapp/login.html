@@ -1,0 +1,71 @@
+{% extends 'todoapp/base.html' %}
+
+{% block content %}
+<div class="container auth-container d-flex justify-content-center align-items-center vh-100">
+    <div class="row w-100 shadow-lg rounded overflow-hidden">
+        <!-- Left Image Section -->
+        <div class="col-md-6 d-none d-md-block p-0">
+            <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80"
+                 class="img-fluid h-100 w-100 object-fit-cover" alt="Tasks Image">
+        </div>
+
+        <!-- Login Form Section -->
+        <div class="col-md-6 bg-white p-5 d-flex flex-column justify-content-center">
+            <div class="text-center mb-4">
+                <i class="fas fa-check-circle fa-4x text-primary mb-3"></i>
+                <h2 class="fw-bold">Login to TaskMaster</h2>
+                <p class="text-muted">Manage your tasks efficiently</p>
+            </div>
+
+            {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="username" class="form-label fw-semibold">Username</label>
+                    <input type="text" name="username" id="username" class="form-control form-control-lg" placeholder="Enter your username" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-semibold">Password</label>
+                    <input type="password" name="password" id="password" class="form-control form-control-lg" placeholder="Enter your password" required>
+                </div>
+
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-primary btn-lg fw-bold" style="background: linear-gradient(135deg, #4361ee, #3f37c9); border: none;">
+                        <i class="fas fa-sign-in-alt me-2"></i> Login
+                    </button>
+                </div>
+
+                <div class="text-center mb-3">
+                    <a href="{% url 'password_reset' %}" class="text-decoration-none text-primary">Forgot your password?</a>
+                </div>
+
+                <div class="text-center">
+                    <p class="mb-0">Don't have an account? 
+                        <a href="{% url 'register' %}" class="fw-semibold text-primary text-decoration-none">Register</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-container {
+    max-width: 900px;
+}
+
+.object-fit-cover {
+    object-fit: cover;
+}
+
+@media (max-width: 767px) {
+    .col-md-6.d-none.d-md-block {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

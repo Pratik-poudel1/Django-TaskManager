@@ -1,0 +1,21 @@
+{% extends 'todoapp/base.html' %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-danger text-white">
+        <h2 class="mb-0">Confirm Deletion</h2>
+    </div>
+    <div class="card-body">
+        <p>Are you sure you want to delete the task <strong>"{{ task.title }}"</strong>?</p>
+        <p>This action cannot be undone.</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-flex justify-content-end">
+                <a href="{% url 'task_list' %}" class="btn btn-outline-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-danger">Delete Task</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

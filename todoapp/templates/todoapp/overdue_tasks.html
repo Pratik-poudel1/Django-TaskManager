@@ -1,0 +1,160 @@
+{% extends 'todoapp/base.html' %}
+{% load widget_tweaks %}
+
+{% block extra_css %}
+<style>
+    /* Task card design similar to pending tasks */
+    .task-card.overdue {
+        background: #f8d7da;
+        /* Light red/pink */
+        color: #721c24;
+        /* Dark red text for contrast */
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(13, 59, 102, 0.2);
+        transition: box-shadow 0.3s ease;
+        border-left: 6px solid #dc3545;
+        /* Red border for emphasis */
+    }
+
+    .task-card.overdue:hover {
+        box-shadow: 0 8px 16px rgba(13, 59, 102, 0.3);
+    }
+
+
+    /* Priority badges */
+    .badge-priority-high {
+        background-color: #dc3545 !important;
+        /* Red */
+        color: white !important;
+    }
+
+    .badge-priority-medium {
+        background-color: #ffc107 !important;
+        /* Yellow */
+        color: black !important;
+    }
+
+    .badge-priority-low {
+        background-color: #198754 !important;
+        /* Green */
+        color: white !important;
+    }
+
+    /* Search bar styling same as task_list */
+    form.mb-3 .input-group .form-control {
+        border: 2px solid #0d6efd;
+        border-right: none;
+        border-radius: 30px 0 0 30px;
+        padding-left: 15px;
+        font-weight: 500;
+        color: #0d3b66;
+        box-shadow: 0 0 6px rgba(13, 110, 253, 0.4);
+        transition: border-color 0.3s ease;
+    }
+
+    form.mb-3 .input-group .form-control:focus {
+        border-color: #0a58ca;
+        box-shadow: 0 0 10px rgba(10, 88, 202, 0.7);
+        outline: none;
+    }
+
+    form.mb-3 .input-group .btn-outline-secondary {
+        border: 2px solid #0d6efd;
+        border-radius: 0 30px 30px 0;
+        background-color: #0d6efd;
+        color: white;
+        font-weight: 600;
+        transition: background-color 0.3s ease;
+    }
+
+    form.mb-3 .input-group .btn-outline-secondary:hover {
+        background-color: #0a58ca;
+        border-color: #0a58ca;
+        color: white;
+    }
+
+    /* Category badges inline with priority */
+    .task-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+    }
+</style>
+
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Overdue Tasks</h1>
+    <a href="{% url 'task_list' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Tasks
+    </a>
+</div>
+
+<!-- Search form -->
+<form method="get" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" class="form-control" placeholder="Search overdue tasks..."
+            value="{{ query|default:'' }}">
+        <button class="btn btn-outline-secondary" type="submit">
+            <i class="fas fa-search"></i>
+        </button>
+    </div>
+</form>
+
+{% if tasks %}
+<div class="row tasks-container">
+    {% for task in tasks %}
+    <div class="col-md-6 col-lg-4 mb-3 task-col" data-task-id="{{ task.id }}">
+        <div class="card task-card overdue">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title">{{ task.title }}</h5>
+                    <span class="badge bg-danger">Overdue</span>
+                </div>
+
+                <div class="task-info mb-2">
+                    {% if task.priority_level == 'H' %}
+                    <span class="badge badge-priority-high">High</span>
+                    {% elif task.priority_level == 'M' %}
+                    <span class="badge badge-priority-medium">Medium</span>
+                    {% else %}
+                    <span class="badge badge-priority-low">Low</span>
+                    {% endif %}
+
+                    {% for category in task.categories.all %}
+                    <span class="badge bg-secondary">{{ category.name }}</span>
+                    {% endfor %}
+                </div>
+
+                <p class="card-text">{{ task.description|truncatechars:100 }}</p>
+
+                {% if task.due_date %}
+                <div class="mb-2">
+                    <small>
+                        <i class="far fa-clock me-1"></i> Due: {{ task.due_date|date:"M d, Y H:i" }}
+                    </small>
+                </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between mt-3">
+                    <small>Created: {{ task.created|date:"M d, Y" }}</small>
+                    <div>
+                        <a href="{% url 'update_task' task.id %}" class="btn btn-sm btn-outline-primary me-1">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'delete_task' task.id %}" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">No overdue tasks. Great job!</div>
+{% endif %}
+{% endblock %}
