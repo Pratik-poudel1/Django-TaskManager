@@ -2,7 +2,7 @@
 
 A personal task management app built with Django. You can create tasks, assign priorities and categories, track overdue items, and see a dashboard of what you've actually been doing.
 
-Live demo: [django-taskmanager.onrender.com](https://django-taskmanager.onrender.com)
+Live demo: [django-taskmanager.onrender.com](https://django-taskmanager-3yi8.onrender.com/)
 
 ---
 
