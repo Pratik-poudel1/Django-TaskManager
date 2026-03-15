@@ -21,6 +21,19 @@
             <form method="post">
                 {% csrf_token %}
 
+                {% if form.errors %}
+                <div class="alert alert-danger">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <div><strong>{{ field.label }}:</strong> {{ error }}</div>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
                 <div class="mb-4">
                     <label for="id_username" class="form-label fw-semibold">Username</label>
                     {% render_field form.username class="form-control form-control-lg" placeholder="Choose a username" %}
