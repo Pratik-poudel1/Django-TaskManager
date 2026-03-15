@@ -84,9 +84,16 @@ import dj_database_url
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
-    }
+    db_config = dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
+    if db_config.get('NAME'):  # Only use if parsing succeeded
+        DATABASES = {'default': db_config}
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 else:
     DATABASES = {
         'default': {
