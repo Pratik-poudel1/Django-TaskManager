@@ -1,1 +1,1 @@
-web: gunicorn todoprj.wsgi
+web: gunicorn todoprj.wsgi --bind 0.0.0.0:$PORT --timeout 120 --workers 2
