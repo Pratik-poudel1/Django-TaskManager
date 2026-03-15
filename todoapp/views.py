@@ -186,9 +186,10 @@ def register_view(request):
             user = form.save()
             login(request, user)
             return redirect('task_list')
+        # form errors will be passed back to template automatically
     else:
         form = CustomUserCreationForm()
-    return render(request, 'todoapp/register.html', {'form': form})
+    return render(request, 'todoapp/register.html', {'form': form, 'errors': form.errors if request.method == 'POST' else None})
 
 def login_view(request):
     if request.method == 'POST':
